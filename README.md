@@ -54,6 +54,12 @@ npm install
 npx tsc
 ```
 
+#### 3. Run in Dev Mode (auto-reloads on file changes)
+
+```bash
+npm run dev
+```
+
 ---
 
 ### 🛠️ Usage
