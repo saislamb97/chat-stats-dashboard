@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Stats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">📊 Chat Statistics</h1>
+
+    <form id="filterForm" class="flex flex-wrap gap-4 mb-6">
+      <input type="date" id="startDate" class="px-3 py-2 border rounded" />
+      <input type="date" id="endDate" class="px-3 py-2 border rounded" />
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Get Stats</button>
+    </form>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white shadow-md rounded border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="py-2 px-4 text-left">Website ID</th>
+            <th class="py-2 px-4 text-left">Total Chats</th>
+            <th class="py-2 px-4 text-left">Missed Chats</th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody" class="divide-y divide-gray-200"></tbody>
+      </table>
+    </div>
+
+    <div id="pagination" class="flex justify-center mt-6 gap-2"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('filterForm');
+    const tbody = document.getElementById('statsTableBody');
+    const pagination = document.getElementById('pagination');
+
+    const pageSize = 10;
+    let currentPage = 1;
+    let fullData = [];
+
+    const renderTable = () => {
+      const start = (currentPage - 1) * pageSize;
+      const pageData = fullData.slice(start, start + pageSize);
+
+      tbody.innerHTML = '';
+      pageData.forEach(stat => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="py-2 px-4">${stat.websiteId}</td>
+            <td class="py-2 px-4">${stat.chats}</td>
+            <td class="py-2 px-4">${stat.missedChats}</td>
+          </tr>
+        `;
+      });
+
+      renderPagination();
+    };
+
+    const renderPagination = () => {
+      const totalPages = Math.ceil(fullData.length / pageSize);
+      pagination.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = `px-3 py-1 rounded border ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'}`;
+        btn.addEventListener('click', () => {
+          currentPage = i;
+          renderTable();
+        });
+        pagination.appendChild(btn);
+      }
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      let url = '/api/stats';
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      if (params.toString()) url += '?' + params.toString();
+
+      const res = await fetch(url);
+      fullData = await res.json();
+      currentPage = 1;
+      renderTable();
+    });
+
+    form.dispatchEvent(new Event('submit')); // Load initially
+  </script>
+</body>
+</html>
